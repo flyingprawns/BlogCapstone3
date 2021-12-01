@@ -38,6 +38,11 @@
                   (check main.py -> add_new_post())
                 -->
                 {{ post.body|safe }}
+
+                <!-- Edit Post -->
+                <div class="d-flex justify-content-end mb-4">
+                  <a class="btn btn-primary float-right" href="{{url_for('edit_post', post_id=post.id)}}">Edit Post</a>
+                </div>
             </div>
         </div>
     </div>

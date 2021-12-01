@@ -45,7 +45,7 @@ class CreatePostForm(FlaskForm):
 def strip_invalid_html(content):
     allowed_tags = ['a', 'abbr', 'acronym', 'address', 'b', 'br', 'div', 'dl', 'dt',
                     'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img',
-                    'li', 'ol', 'p', 'pre', 'q', 's', 'small', 'strike',
+                    'li', 'ol', 'p', 'pre', 'q', 's', 'small', 'strike', 'strong',
                     'span', 'sub', 'sup', 'table', 'tbody', 'td', 'tfoot', 'th',
                     'thead', 'tr', 'tt', 'u', 'ul']
     allowed_attrs = {
@@ -109,6 +109,37 @@ def add_new_post():
         db.session.commit()
         return redirect(url_for('home_page'))
     return render_template("make-post.html", form=form)
+
+
+@app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
+def edit_post(post_id):
+    post = BlogPost.query.get(post_id)
+    edit_form = CreatePostForm(
+        title=post.title,
+        subtitle=post.subtitle,
+        img_url=post.img_url,
+        author=post.author,
+        body=post.body
+    )
+    if edit_form.validate_on_submit():
+        post.title = edit_form.title.data
+        post.subtitle = edit_form.subtitle.data
+        post.img_url = edit_form.img_url.data
+        post.author = edit_form.author.data
+        # Posts inside "post.html" are marked as "|safe".
+        # To prevent malicious injections, 'body' is stripped of illegal tags before being saved.
+        post.body = strip_invalid_html(edit_form.body.data)
+        db.session.commit()
+        return redirect(url_for("get_post", post_id=post.id))
+    return render_template("make-post.html", form=edit_form, is_edit=True)
+
+
+@app.route("/delete/<int:post_id>")
+def delete_post(post_id):
+    post_to_delete = BlogPost.query.get(post_id)
+    db.session.delete(post_to_delete)
+    db.session.commit()
+    return redirect(url_for('home_page'))
 
 
 # ------- Start application ------- #
